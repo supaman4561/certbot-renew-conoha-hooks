@@ -34,7 +34,8 @@ vim config.env
 | `CONOHA_TENANT_ID` | テナントID (ConoHaコントロールパネル > API) |
 | `CONOHA_API_USERNAME` | API ユーザー名 |
 | `CONOHA_API_PASSWORD` | API パスワード |
-| `CONOHA_REGION` | リージョン (`tyo1` / `tyo2` / `sin1` / `sjc1`) |
+| `CONOHA_REGION` | リージョン。コントロールパネル > API のエンドポイントURLで確認 (`c3j1` / `tyo1` / `tyo2` など) |
+| `CONOHA_IDENTITY_VERSION` | Identity API バージョン。`c3j1` など新世代は `v3`、`tyo1`/`tyo2` など旧世代は `v2.0` |
 | `CONOHA_PROPAGATION_WAIT` | DNS 伝播待ち時間（秒、デフォルト: 60） |
 
 ### 3. 実行権限を付与

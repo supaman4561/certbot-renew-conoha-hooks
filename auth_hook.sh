@@ -36,24 +36,48 @@ log() {
 log "開始: ドメイン=${CERTBOT_DOMAIN}"
 
 # 認証トークン取得
-log "ConoHa API トークンを取得中..."
-TOKEN_RESPONSE=$(curl -s -f -X POST \
-  "https://identity.${CONOHA_REGION}.conoha.io/v2.0/tokens" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"auth\": {
-      \"tenantId\": \"${CONOHA_TENANT_ID}\",
-      \"passwordCredentials\": {
-        \"username\": \"${CONOHA_API_USERNAME}\",
-        \"password\": \"${CONOHA_API_PASSWORD}\"
-      }
-    }
-  }")
+IDENTITY_VERSION="${CONOHA_IDENTITY_VERSION:-v3}"
+log "ConoHa API トークンを取得中 (Identity ${IDENTITY_VERSION})..."
 
-TOKEN=$(echo "${TOKEN_RESPONSE}" | jq -r '.access.token.id')
+if [[ "${IDENTITY_VERSION}" == "v2.0" ]]; then
+  TOKEN=$(curl -s -f -X POST \
+    "https://identity.${CONOHA_REGION}.conoha.io/v2.0/tokens" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"auth\": {
+        \"tenantId\": \"${CONOHA_TENANT_ID}\",
+        \"passwordCredentials\": {
+          \"username\": \"${CONOHA_API_USERNAME}\",
+          \"password\": \"${CONOHA_API_PASSWORD}\"
+        }
+      }
+    }" | jq -r '.access.token.id')
+else
+  # v3: トークンはレスポンスヘッダー X-Subject-Token に返される
+  TOKEN=$(curl -s -i -f -X POST \
+    "https://identity.${CONOHA_REGION}.conoha.io/v3/auth/tokens" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"auth\": {
+        \"identity\": {
+          \"methods\": [\"password\"],
+          \"password\": {
+            \"user\": {
+              \"name\": \"${CONOHA_API_USERNAME}\",
+              \"password\": \"${CONOHA_API_PASSWORD}\",
+              \"domain\": {\"name\": \"Default\"}
+            }
+          }
+        },
+        \"scope\": {
+          \"project\": {\"id\": \"${CONOHA_TENANT_ID}\"}
+        }
+      }
+    }" | grep -i "^x-subject-token:" | awk '{print $2}' | tr -d '\r\n')
+fi
+
 if [[ -z "${TOKEN}" || "${TOKEN}" == "null" ]]; then
   log "Error: トークンの取得に失敗しました"
-  log "レスポンス: ${TOKEN_RESPONSE}"
   exit 1
 fi
 log "トークン取得成功"
