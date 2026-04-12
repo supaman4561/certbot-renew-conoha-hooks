@@ -61,8 +61,8 @@ certbot certonly \
   --preferred-challenges dns \
   --manual-auth-hook /etc/certbot-hooks/auth_hook.sh \
   --manual-cleanup-hook /etc/certbot-hooks/cleanup_hook.sh \
-  -d "*.example.com" \
-  -d "example.com"
+  -d "*.supaperman.net" \
+  -d "supaperman.net"
 ```
 
 ### 手動更新
